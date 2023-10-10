@@ -19,7 +19,7 @@ start_date = st.sidebar.date_input("Start date", pd.to_datetime('2020-01-01'))
 end_date = st.sidebar.date_input("End date", pd.to_datetime('2022-01-01'))
 
 # Download historical data
-@st.cache_data
+# @st.cache_data
 def load_data(symbol, start, end):
     data = yf.download(symbol, start=start, end=end)
     return data
