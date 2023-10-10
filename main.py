@@ -20,8 +20,12 @@ end_date = st.sidebar.date_input("End date", pd.to_datetime('2022-01-01'))
 
 # Download historical data
 # @st.cache_data
+
 def load_data(symbol, start, end):
-    data = yf.download(symbol, start=start, end=end)
+    try:
+        data = yf.download(symbol, start=start_date, end=end_date)
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
     return data
 
 data = load_data(stock_symbol, start_date, end_date)
