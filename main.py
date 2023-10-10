@@ -35,6 +35,7 @@ st.title("Stock Price Prediction")
 
 st.subheader("Historical Data")
 st.write(data)
+print(data)
 
 
 # Linear Regression Model
