@@ -1,79 +1,57 @@
+# Import necessary libraries
 import streamlit as st
-import yfinance as yf
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
-import numpy as np
 
-# Set the page title
-st.set_page_config(page_title="Stock Price Prediction", layout="wide")
+# Set the title and description of the app
+st.title("Salary Prediction App")
+st.write("Predict salary based on years of experience and education level")
 
-# Sidebar
-st.sidebar.header("User Input")
+# Upload dataset
+st.write("Upload your dataset:")
+uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+if uploaded_file is not None:
+    data = pd.read_csv(uploaded_file)
 
-# Select a stock
-stock_symbol = st.sidebar.text_input("Enter stock symbol (e.g., AAPL for Apple)", "AAPL")
+    # Display the dataset
+    st.write("Preview of the dataset:")
+    st.write(data.head())
 
-# Select a date range
-start_date = st.sidebar.date_input("Start date", pd.to_datetime('2020-01-01'))
-end_date = st.sidebar.date_input("End date", pd.to_datetime('2022-01-01'))
+    # Data preprocessing
+    X = data[['YearsExperience', 'EducationLevel']]
+    y = data['Salary']
 
-# Download historical data
-# @st.cache_data
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-def load_data(symbol, start, end):
-    try:
-        data = yf.download(symbol, start=start_date, end=end_date)
-    except Exception as e:
-        st.error(f"An error occurred: {str(e)}")
-    return data
+    # Build and train the model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
 
-data = load_data(stock_symbol, start_date, end_date)
+    # Make predictions on the test set
+    y_pred = model.predict(X_test)
 
-# Main content
-st.title("Stock Price Prediction")
+    # Calculate the Mean Squared Error (MSE) as a performance metric
+    mse = mean_squared_error(y_test, y_pred)
+    st.write(f"Mean Squared Error (MSE): {mse}")
 
-st.subheader("Historical Data")
-st.write(data)
-print(data)
+    # Create a scatter plot of actual vs. predicted salaries
+    fig, ax = plt.subplots()
+    ax.scatter(y_test, y_pred)
+    ax.set_xlabel('Actual Salary')
+    ax.set_ylabel('Predicted Salary')
+    ax.set_title('Actual vs. Predicted Salary')
+    st.pyplot(fig)
 
+    # Create a form for user input
+    st.write("Enter the number of years of experience and education level to predict salary:")
+    years_of_experience = st.number_input("Years of Experience", min_value=0, max_value=50, value=5)
+    education_level = st.slider("Education Level", min_value=0, max_value=20, value=10)
 
-# Linear Regression Model
-st.subheader("Stock Price Prediction")
-
-# Select the number of days for prediction
-n_days = st.sidebar.slider("Select the number of days for prediction", 1, 365, 30)
-
-# Create a feature (X) and target (y) variable
-data['Date'] = data.index
-data['Date'] = pd.to_datetime(data['Date'])
-data['OrdinalDate'] = data['Date'].map(lambda x: x.toordinal())
-
-X = data[['OrdinalDate']].values
-y = data['Close'].values
-
-# Create and fit the linear regression model
-model = LinearRegression()
-model.fit(X, y)
-
-# Create future dates for prediction
-future_dates = pd.date_range(start=end_date, periods=n_days + 1)
-future_ordinal_dates = np.array([date.toordinal() for date in future_dates]).reshape(-1, 1)
-
-# Make predictions
-predicted_prices = model.predict(future_ordinal_dates)
-
-# Create a DataFrame for predictions
-prediction_data = pd.DataFrame({'Date': future_dates, 'Predicted Close': predicted_prices})
-prediction_data.set_index('Date', inplace=True)
-
-# Combine historical and predicted data for plotting
-combined_data = pd.concat([data['Close'], prediction_data['Predicted Close']], axis=1)
-combined_data.columns = ['Historical Close', 'Predicted Close']
-
-# Plot the historical and predicted data
-st.line_chart(combined_data)
-
-# Display the prediction data
-st.write("Predicted Price Data")
-st.write(prediction_data)
+    # Predict salary based on user input
+    user_input = pd.DataFrame({'YearsExperience': [years_of_experience], 'EducationLevel': [education_level]})
+    predicted_salary = model.predict(user_input)
+    st.write(f"Predicted Salary: {predicted_salary[0]:.2f}")
