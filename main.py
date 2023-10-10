@@ -33,8 +33,10 @@ data = load_data(stock_symbol, start_date, end_date)
 # Main content
 st.title("Stock Price Prediction")
 
+# st.subheader("Historical Data")
+# st.write(data)
 st.subheader("Historical Data")
-st.write(data)
+st.dataframe(data)
 
 # Linear Regression Model
 st.subheader("Stock Price Prediction")
